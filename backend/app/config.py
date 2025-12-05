@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     dev_admin_package: str = Field("trial", env="DEV_ADMIN_PACKAGE")
     dev_admin_expiry_days: int = Field(365, env="DEV_ADMIN_EXPIRY_DAYS")
     password_reset_url: Optional[str] = Field(None, env="PASSWORD_RESET_URL")
+    
+    # Groq API Configuration
+    groq_api_key: Optional[str] = Field(None, env="GROQ_API_KEY")
 
     public_base_url: Optional[str] = Field(
         None,
