@@ -57,6 +57,7 @@ class EdgeTTSService:
                 filename,
                 exc,
             )
+            logger.exception("Full TTS error details for %s:", filename)
             try:
                 if target_path.exists():
                     target_path.unlink(missing_ok=True)
