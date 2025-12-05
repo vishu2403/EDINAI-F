@@ -396,6 +396,9 @@ def read_pdf_with_ocrmypdf(pdf_path: Path, ocr_language: str) -> str:
                 rotate_pages=True,
                 deskew=True,
 
+                # Color space fix - avoid PDF/A conversion issues
+                output_type='pdf',       # PDF/A conversion skip karo (color space errors avoid)
+
                 # Server pe progress bar ki zaroorat nahi
                 progress_bar=False,
             )
