@@ -3,8 +3,7 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONPATH=/app/backend:$PYTHONPATH \
-    # Optional but useful so Tesseract knows where to find traineddata
-    TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
 
 WORKDIR /app
 
@@ -24,7 +23,6 @@ RUN apt-get update && \
         ghostscript \
     && pip install --upgrade pip \
     && pip install -r requirements.txt \
-    # Make sure pytesseract (and optionally ocrmypdf) are available
     && pip install pytesseract ocrmypdf \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
