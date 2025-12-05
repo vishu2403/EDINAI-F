@@ -365,13 +365,8 @@ def detect_dominant_language(text: str) -> Optional[str]:
     logger.info("Unable to detect language from the provided text sample.")
     return None
 
-def read_pdf_with_ocrmypdf(pdf_path: Path, ocr_language: str) -> str:
-    """
-    Given a PDF path, run OCRmyPDF (only when needed) and return extracted text.
-    - Tagged / already-text PDFs: OCR skip ho jayega (fast)
-    - Image-only PDFs: OCR run hoga
-    """
 
+def read_pdf_with_ocrmypdf(pdf_path: Path, ocr_language: str) -> str:
     if ocrmypdf is None:
         raise RuntimeError("ocrmypdf is required. Install it with 'pip install ocrmypdf'.")
 
@@ -385,60 +380,36 @@ def read_pdf_with_ocrmypdf(pdf_path: Path, ocr_language: str) -> str:
                 str(pdf_path),
                 str(output_pdf),
                 sidecar=str(sidecar_text),
-
-                # 🔑 Performance + correctness settings
-                language=ocr_language,   # e.g. "eng+hin+guj" (jitni zaroorat utni hi)
-                skip_text=True,          # agar PDF me already text hai to OCR mat karo
-                force_ocr=False,         # har PDF pe zabardasti OCR nahi
-                tesseract_timeout=30,    # per-page max wait (seconds)
-
-                # Quality helpers
+                force_ocr=True,
+                language=ocr_language,
+                progress_bar=True,
                 rotate_pages=True,
                 deskew=True,
-
-                # Color space fix - avoid PDF/A conversion issues
-                output_type='pdf',       # PDF/A conversion skip karo (color space errors avoid)
-
-                # Server pe progress bar ki zaroorat nahi
-                progress_bar=False,
             )
-
         except OCRMissingDependencyError as exc:
             raise RuntimeError(
                 "OCRmyPDF is missing required external dependencies (e.g., Ghostscript or Tesseract). "
                 "Install them and try again."
             ) from exc
-
-        # agar kahin existing OCR layer detect ho to yaha aa sakta hai
         except getattr(ocrmypdf.exceptions, "PriorOcrFoundError", tuple()) as exc:  # type: ignore[arg-type]
             logger.warning("OCRmyPDF detected existing OCR layer; skipping additional OCR.")
-            # is case me, direct original PDF se text read karne ki koshish karte hain
-            try:
-                return read_pdf(pdf_path)
-            except Exception as read_exc:  # pragma: no cover - diagnostics only
-                logger.warning("Failed to read original PDF text after PriorOcrFoundError: %s", read_exc)
-                return ""
-
+            return ""
         except getattr(ocrmypdf.exceptions, "ExitCodeError", tuple()) as exc:  # type: ignore[arg-type]
             raise RuntimeError(f"OCRmyPDF failed: {exc}") from exc
-
         except OCRProcessingError as exc:  # type: ignore[misc]
             raise RuntimeError(f"OCRmyPDF error: {exc}") from exc
 
-        # ✅ Pehle sidecar file (plain text) try karo
         if sidecar_text.exists():
             sidecar_content = sidecar_text.read_text(encoding="utf-8", errors="ignore")
             if sidecar_content.strip():
                 return sidecar_content
 
-        # Agar sidecar empty hai to OCR output PDF se text nikaal lo
         if output_pdf.exists():
             try:
                 return read_pdf(output_pdf)
             except Exception as exc:  # pragma: no cover - diagnostics only
                 logger.warning("Failed to read OCR output PDF text: %s", exc)
 
-        # Sab fail ho gaya to empty string
         return ""
 
 
