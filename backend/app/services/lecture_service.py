@@ -193,7 +193,7 @@ class LectureService:
         return self._sanitize_audio_metadata(updated_record)
 
     def _build_audio_url(self, lecture_id: str, filename: str) -> str:
-        relative_url = f"/chapter-materials/chapter_lecture/audio/{lecture_id}/{filename}"
+        relative_url = f"/chapter_lecture/audio/{lecture_id}/{filename}"
         if self._public_base_url:
             return f"{self._public_base_url}{relative_url}"
         return relative_url
